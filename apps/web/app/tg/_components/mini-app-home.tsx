@@ -1,112 +1,55 @@
 'use client';
 
-import type { AuthResponse } from '@univer/contract';
-import { useCallback, useEffect, useState } from 'react';
-import { apiFetch, ApiError } from '@/lib/api';
-import { getTelegramWebApp } from '@/lib/telegram';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import {
+  ErrorScreen,
+  LoadingScreen,
+  OutsideScreen,
+  TgShell,
+} from './tg-shell';
+import { authedFetch } from '@/lib/session';
+import { useSession } from '@/lib/use-session';
 
-type Status = 'loading' | 'ready' | 'outside-telegram' | 'error';
-
-interface MeResponse {
-  id: string;
-  name: string | null;
-  avatarUrl: string | null;
-  xp: number;
-  level: number;
-  streak: { current: number; longest: number };
+interface SubjectSummary {
+  slug: string;
+  title: string;
+  active: boolean;
+  progress: number;
 }
 
 export function MiniAppHome() {
-  const [status, setStatus] = useState<Status>('loading');
-  const [me, setMe] = useState<MeResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const authenticate = useCallback(async (initData: string) => {
-    const auth = await apiFetch<AuthResponse>('/auth/telegram', {
-      method: 'POST',
-      body: JSON.stringify({ initData }),
-    });
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('accessToken', auth.accessToken);
-      window.localStorage.setItem('refreshToken', auth.refreshToken);
-    }
-
-    const profile = await apiFetch<MeResponse>('/me', {
-      headers: { Authorization: `Bearer ${auth.accessToken}` },
-    });
-
-    setMe(profile);
-    setStatus('ready');
-  }, []);
+  const session = useSession();
+  const [subjects, setSubjects] = useState<SubjectSummary[] | null>(null);
 
   useEffect(() => {
-    const webApp = getTelegramWebApp();
+    if (session.status !== 'ready') return;
+    let cancelled = false;
 
-    if (!webApp) {
-      setStatus('outside-telegram');
-      return;
-    }
+    authedFetch<{ data: SubjectSummary[] }>('/subjects', session.token)
+      .then((result) => {
+        if (!cancelled) setSubjects(result.data);
+      })
+      .catch(() => {
+        if (!cancelled) setSubjects([]);
+      });
 
-    webApp.ready();
-    webApp.expand();
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
 
-    if (!webApp.initData) {
-      setStatus('outside-telegram');
-      return;
-    }
+  if (session.status === 'loading') return <LoadingScreen />;
+  if (session.status === 'outside') return <OutsideScreen />;
+  if (session.status === 'error') return <ErrorScreen message={session.message} />;
 
-    authenticate(webApp.initData).catch((cause: unknown) => {
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Kirishda xatolik yuz berdi. Qayta urinib ko'ring.",
-      );
-      setStatus('error');
-    });
-  }, [authenticate]);
-
-  if (status === 'loading') {
-    return (
-      <Shell>
-        <div className="space-y-4">
-          <div className="h-8 w-40 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800" />
-          <div className="h-24 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
-          <div className="h-24 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
-        </div>
-      </Shell>
-    );
-  }
-
-  if (status === 'outside-telegram') {
-    return (
-      <Shell>
-        <div className="rounded-2xl border border-slate-200 p-6 dark:border-slate-800">
-          <h1 className="text-xl font-semibold">Telegram ichida oching</h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Mini App faqat Telegram bot orqali ishlaydi. Botni ochib,
-            &laquo;Ilovani ochish&raquo; tugmasini bosing.
-          </p>
-        </div>
-      </Shell>
-    );
-  }
-
-  if (status === 'error') {
-    return (
-      <Shell>
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
-          <h1 className="text-lg font-semibold">Kirish amalga oshmadi</h1>
-          <p className="mt-2 text-sm">{error}</p>
-        </div>
-      </Shell>
-    );
-  }
+  const { me, token } = session;
+  const active = subjects?.filter((subject) => subject.active) ?? [];
 
   return (
-    <Shell>
+    <TgShell>
       <header className="flex items-center gap-3">
-        {me?.avatarUrl ? (
+        {me.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={me.avatarUrl}
@@ -115,69 +58,81 @@ export function MiniAppHome() {
           />
         ) : (
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-lg font-semibold text-brand-700">
-            {(me?.name ?? 'U').slice(0, 1).toUpperCase()}
+            {(me.name ?? 'U').slice(0, 1).toUpperCase()}
           </div>
         )}
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-sm text-slate-500 dark:text-slate-400">Salom,</p>
-          <p className="text-lg font-semibold">{me?.name ?? 'O‘quvchi'}</p>
+          <p className="truncate text-lg font-semibold">
+            {me.name ?? 'O‘quvchi'}
+          </p>
+        </div>
+        <div className="rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-600 dark:bg-orange-950 dark:text-orange-300">
+          🔥 {me.streak.current}
         </div>
       </header>
 
       <section className="grid grid-cols-2 gap-3">
-        <Stat label="XP" value={me?.xp ?? 0} />
-        <Stat label="Daraja" value={me?.level ?? 1} />
+        <Stat label="XP" value={me.xp} />
+        <Stat label="Daraja" value={me.level} />
       </section>
 
-      <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          🔥 Streak
-        </p>
-        <p className="mt-1 text-2xl font-bold">
-          {me?.streak.current ?? 0} kun
-        </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Eng uzun: {me?.streak.longest ?? 0} kun
-        </p>
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+          Fanlar
+        </h2>
+
+        {subjects === null ? (
+          <div className="h-24 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
+        ) : active.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 p-5 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-400">
+            Hozircha faol fan yo‘q.
+          </div>
+        ) : (
+          active.map((subject) => (
+            <Link
+              key={subject.slug}
+              href={`/tg/path/${subject.slug}`}
+              className="block rounded-2xl border border-slate-200 p-5 transition hover:bg-slate-50 active:scale-[0.99] dark:border-slate-800 dark:hover:bg-slate-900"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">{subject.title}</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    Yo‘l xaritasi bo‘yicha o‘rganish
+                  </p>
+                </div>
+                <span aria-hidden className="text-xl text-slate-400">
+                  ›
+                </span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div
+                  className="h-full rounded-full bg-brand-600 transition-all"
+                  style={{ width: `${Math.round(subject.progress * 100)}%` }}
+                />
+              </div>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {Math.round(subject.progress * 100)}% tugallandi
+              </p>
+            </Link>
+          ))
+        )}
       </section>
 
-      <nav className="grid gap-3">
-        {[
-          { icon: '🗺️', label: "Yo'l xaritasi", hint: 'Ketma-ket o‘rganish' },
-          { icon: '📚', label: 'Kutubxona', hint: 'Erkin tanlash' },
-          { icon: '📝', label: 'Testlar', hint: 'Imtihon simulyatsiyasi' },
-        ].map((item) => (
-          <button
-            key={item.label}
-            type="button"
-            className="flex items-center gap-4 rounded-2xl border border-slate-200 p-4 text-left transition hover:bg-slate-50 active:scale-[0.99] dark:border-slate-800 dark:hover:bg-slate-900"
-          >
-            <span className="text-2xl">{item.icon}</span>
-            <span className="flex-1">
-              <span className="block font-semibold">{item.label}</span>
-              <span className="block text-xs text-slate-500 dark:text-slate-400">
-                {item.hint}
-              </span>
-            </span>
-            <span aria-hidden className="text-slate-400">
-              ›
-            </span>
-          </button>
-        ))}
-      </nav>
+      <section className="grid gap-3">
+        <div className="rounded-2xl border border-dashed border-slate-300 p-5 dark:border-slate-700">
+          <p className="font-semibold">📝 Imtihon simulyatsiyasi</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Tez orada: milliy sertifikat va DTM formatidagi testlar.
+          </p>
+        </div>
+      </section>
 
-      <p className="text-center text-xs text-slate-400">
-        Fizika piloti — kontent tayyorlanmoqda
+      <p className="mt-auto text-center text-xs text-slate-400">
+        Fizika piloti · {token ? 'sessiya faol' : ''}
       </p>
-    </Shell>
-  );
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="tg-shell flex min-h-dvh flex-col gap-5 px-4 py-6">
-      {children}
-    </main>
+    </TgShell>
   );
 }
 

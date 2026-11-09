@@ -17,6 +17,7 @@ const envSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
+  R2_PUBLIC_BASE: z.string().default('https://media.univeracademy.uz'),
   LOG_LEVEL: z.string().default('info'),
 });
 

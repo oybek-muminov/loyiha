@@ -93,6 +93,12 @@ export const submitAttemptSchema = z.object({
 
 export type SubmitAttemptRequest = z.infer<typeof submitAttemptSchema>;
 
+export const responsePatchSchema = z.object({
+  answer: answerSchema,
+});
+
+export type ResponsePatchRequest = z.infer<typeof responsePatchSchema>;
+
 export const startAttemptSchema = z
   .object({
     quizId: z.string().uuid().optional(),

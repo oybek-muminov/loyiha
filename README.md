@@ -43,10 +43,12 @@ cp apps/api/.env.example apps/api/.env
 
 # 3. Baza (Docker bo'lsa)
 docker compose -f infra/docker-compose.dev.yml up -d
+# Docker bo'lmasa — lokal PostgreSQL 16+ (univer/univer, univeracademy)
 
 # 4. Prisma
 pnpm db:generate
 pnpm db:migrate
+pnpm db:seed            # demo Fizika: 5 dars, 3 test, 11 savol
 
 # 5. API
 pnpm --filter @univer/api dev
@@ -57,8 +59,36 @@ pnpm --filter @univer/web dev
 
 - Web: http://localhost:3000
 - Mini App: http://localhost:3000/tg
+- Yo'l xaritasi: http://localhost:3000/tg/path/fizika
 - API: http://localhost:4000/v1
 - Health: http://localhost:4000/health
+
+## Asosiy API endpointlari
+
+| Metod | Yo'l | Vazifa |
+|---|---|---|
+| POST | `/v1/auth/telegram` | Telegram `initData` orqali kirish |
+| POST | `/v1/auth/refresh` | Access tokenni yangilash |
+| GET | `/v1/me` | Profil, XP, daraja, streak |
+| GET | `/v1/subjects` | Fanlar va progress |
+| GET | `/v1/subjects/:slug/path` | Yo'l xaritasi (unlock holatlari) |
+| GET | `/v1/lessons/:id` | Dars matni va progress |
+| GET | `/v1/lessons/:id/playback` | Video manzillari (HLS + mp4) |
+| PUT | `/v1/lessons/:id/progress` | Ko'rish pozitsiyasini saqlash |
+| POST | `/v1/lessons/:id/complete` | Darsni tugatish (+XP, streak) |
+| GET | `/v1/catalog` | Erkin kutubxona |
+| GET | `/v1/quizzes/:id` | Test savollari (javoblarsiz) |
+| POST | `/v1/attempts` | Urinish boshlash |
+| PATCH | `/v1/attempts/:id/responses/:itemId` | Javob saqlash |
+| POST | `/v1/attempts/:id/submit` | Baholash va natija |
+| GET | `/v1/attempts` | Urinishlar tarixi |
+
+## Mini App ekranlari
+
+- `/tg` — bosh ekran: XP, daraja, streak, fanlar
+- `/tg/path/[subject]` — chiziqli yo'l, unlock holatlari
+- `/tg/lesson/[id]` — konspekt (Markdown + KaTeX), video, tugatish
+- `/tg/quiz/[id]` — 4 turdagi savollar, natija va tahlil
 
 ## Buyruqlar
 
@@ -69,6 +99,7 @@ pnpm --filter @univer/web dev
 | `pnpm test` | testlar |
 | `pnpm db:generate` | Prisma client |
 | `pnpm db:migrate` | migratsiya |
+| `pnpm db:seed` | demo Fizika kontenti |
 | `pnpm content:validate ./content/fizika` | kontent tekshiruvi |
 
 ## Telegram Mini App'ni lokal test qilish

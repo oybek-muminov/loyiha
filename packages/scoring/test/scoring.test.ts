@@ -110,6 +110,13 @@ describe('open', () => {
     expect(result.reviewStatus).toBe('pending');
   });
 
+  it('treats exactly 0.40 as failure (boundary)', () => {
+    // "F=ma" only = 2/5 = 0.40
+    const result = scoreItem(open, { text: 'F=ma faqat formula' });
+    expect(result.correct).toBe(false);
+    expect(result.reviewStatus).toBe('none');
+  });
+
   it('fails on empty text', () => {
     expect(scoreItem(open, { text: '   ' }).correct).toBe(false);
   });
