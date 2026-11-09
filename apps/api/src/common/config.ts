@@ -16,6 +16,11 @@ const envSchema = z.object({
   JWT_REFRESH_TTL: z.coerce.number().int().positive().default(2_592_000),
   TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
+  TELEGRAM_MINIAPP_URL: z.string().url().default('http://localhost:3000/tg'),
+  TELEGRAM_BOT_POLLING: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
   R2_PUBLIC_BASE: z.string().default('https://media.univeracademy.uz'),
   LOG_LEVEL: z.string().default('info'),

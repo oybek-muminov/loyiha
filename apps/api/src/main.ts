@@ -18,7 +18,9 @@ async function bootstrap(): Promise<void> {
     new FastifyAdapter({ trustProxy: true }),
   );
 
-  app.setGlobalPrefix('v1', { exclude: ['health'] });
+  app.setGlobalPrefix('v1', {
+    exclude: ['health', 'webhooks/telegram', 'webhooks/r2'],
+  });
   app.enableCors({
     origin: config.CORS_ORIGINS.split(',').map((origin) => origin.trim()),
     credentials: true,

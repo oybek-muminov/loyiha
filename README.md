@@ -102,15 +102,63 @@ pnpm --filter @univer/web dev
 | `pnpm db:seed` | demo Fizika kontenti |
 | `pnpm content:validate ./content/fizika` | kontent tekshiruvi |
 
-## Telegram Mini App'ni lokal test qilish
+## Telegram bot
 
-Mini App HTTPS talab qiladi. Tunnel kerak:
+Bot grammY'da yozilgan va ikki rejimda ishlaydi:
+
+| Rejim | Qachon | Env |
+|---|---|---|
+| Long polling | Lokal test | `TELEGRAM_BOT_POLLING=true` |
+| Webhook | Production | `TELEGRAM_BOT_POLLING=false` |
+
+Kerakli env (`apps/api/.env`):
 
 ```bash
-cloudflared tunnel --url http://localhost:3000
+TELEGRAM_BOT_TOKEN=123456789:AA...      # @BotFather
+TELEGRAM_WEBHOOK_SECRET=random-32-chars # ixtiyoriy, webhook uchun
+TELEGRAM_MINIAPP_URL=https://.../tg     # HTTPS bo'lishi shart
+TELEGRAM_BOT_POLLING=true               # lokal test uchun
 ```
 
-Olingan HTTPS manzilni `@BotFather` → `/setmenubutton` orqali botga ulang.
+### Lokal test (polling)
+
+```bash
+# 1. Mini App uchun HTTPS tunnel
+cloudflared tunnel --url http://localhost:3000
+
+# 2. apps/api/.env ichida tunnel manzilini yozing
+#    TELEGRAM_MINIAPP_URL=https://<tunnel>.trycloudflare.com/tg
+#    TELEGRAM_BOT_POLLING=true
+
+# 3. API'ni ishga tushiring
+pnpm --filter @univer/api dev
+```
+
+Botda `/start` yuboring — Mini App tugmasi paydo bo'ladi.
+
+### Webhook (production)
+
+```bash
+# apps/api/.env
+TELEGRAM_BOT_POLLING=false
+TELEGRAM_WEBHOOK_URL=https://api.univeracademy.uz/webhooks/telegram
+
+# webhook o'rnatish
+pnpm --filter @univer/api bot:set-webhook
+pnpm --filter @univer/api bot:set-webhook -- --info
+pnpm --filter @univer/api bot:set-webhook -- --delete
+```
+
+Webhook endpoint: `POST /webhooks/telegram` (global `/v1` prefiksidan tashqarida).
+Telegram `X-Telegram-Bot-Api-Secret-Token` sarlavhasi `TELEGRAM_WEBHOOK_SECRET`
+bilan solishtiriladi; mos kelmasa `401`.
+
+### Bot buyruqlari
+
+- `/start` — salomlashish + Mini App tugmalari
+- `/menu` — asosiy menyu
+- `/lesson <id>` — darsga to'g'ridan-to'g'ri o'tish
+- `/help` — yordam
 
 ## Hujjatlar
 

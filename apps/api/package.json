@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "bot:set-webhook": "tsx src/bot/set-webhook.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.4.2",
@@ -23,6 +24,7 @@
     "@univer/roadmap": "workspace:*",
     "@univer/scoring": "workspace:*",
     "dotenv": "^18.0.9",
+    "grammy": "^1.46.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "zod": "^4.6.7"

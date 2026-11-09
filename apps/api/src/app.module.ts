@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { AttemptsModule } from './attempts/attempts.module';
 import { AuthModule } from './auth/auth.module';
+import { BotModule } from './bot/bot.module';
 import { APP_CONFIG, type AppConfig } from './common/config';
 import { AppConfigModule } from './common/config.module';
 import { ContentModule } from './content/content.module';
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module';
     ContentModule,
     QuizModule,
     AttemptsModule,
+    BotModule,
   ],
 })
 export class AppModule {}
