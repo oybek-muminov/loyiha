@@ -1,0 +1,105 @@
+# UniverAcademy
+
+Umumiy fanlardan **milliy sertifikat** va **DTM** imtihonlariga tayyorgarlik
+platformasi. Video darslar, chiziqli o'quv yo'li (roadmap) va imtihon muhitini
+takrorlovchi testlar. Bitta baza, uchta kirish: **Telegram bot + Mini App**,
+keyinchalik **web** va **Android**.
+
+Pilot: **Fizika** — 5 bo'lim, ~22 dars, ~300 savol.
+
+## Tuzilma
+
+```
+apps/
+  api/        NestJS + Prisma (REST API, auth, bot webhook)
+  web/        Next.js (Mini App /tg, admin /admin, landing /)
+packages/
+  contract/   zod sxemalar + API tiplar
+  scoring/    javob tekshirish (single/multi/numeric/open)
+  roadmap/    yo'l unlock logikasi
+tools/
+  content-cli kontent validatsiyasi
+infra/        Docker Compose, Caddy, backup
+content/      kontent (md, docx, images) — video R2'da
+```
+
+## Talablar
+
+- Node.js >= 22
+- pnpm >= 10
+- PostgreSQL 16 (Docker tavsiya etiladi)
+- ffmpeg (faqat video ingest uchun)
+
+## Boshlash
+
+```bash
+# 1. O'rnatish
+pnpm install
+
+# 2. Muhit
+cp .env.example .env                 # infra (docker compose) uchun
+cp apps/api/.env.example apps/api/.env
+# apps/web uchun: cp apps/web/.env.example apps/web/.env.local
+
+# 3. Baza (Docker bo'lsa)
+docker compose -f infra/docker-compose.dev.yml up -d
+
+# 4. Prisma
+pnpm db:generate
+pnpm db:migrate
+
+# 5. API
+pnpm --filter @univer/api dev
+
+# 6. Web (boshqa terminalda)
+pnpm --filter @univer/web dev
+```
+
+- Web: http://localhost:3000
+- Mini App: http://localhost:3000/tg
+- API: http://localhost:4000/v1
+- Health: http://localhost:4000/health
+
+## Buyruqlar
+
+| Buyruq | Vazifa |
+|---|---|
+| `pnpm build` | hammasini build qilish |
+| `pnpm typecheck` | tip tekshiruvi |
+| `pnpm test` | testlar |
+| `pnpm db:generate` | Prisma client |
+| `pnpm db:migrate` | migratsiya |
+| `pnpm content:validate ./content/fizika` | kontent tekshiruvi |
+
+## Telegram Mini App'ni lokal test qilish
+
+Mini App HTTPS talab qiladi. Tunnel kerak:
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+Olingan HTTPS manzilni `@BotFather` → `/setmenubutton` orqali botga ulang.
+
+## Hujjatlar
+
+To'liq reja va spetsifikatsiya: `C:\Users\Oybek\.opencode\plan`
+
+- `00-README.md` — indeks
+- `01-mahsulot-spetsifikatsiyasi.md`
+- `02-arxitektura.md`
+- `03-malumotlar-modeli.md`
+- `04-api-kontrakti.md`
+- `05-mini-app-ekranlari.md`
+- `06-video-ingest-r2.md`
+- `07-kontent-import.md`
+- `08-infratuzilma.md`
+- `09-yol-xaritasi.md`
+
+## Texnik eslatmalar
+
+- **Prisma 6.19** ishlatilmoqda. Prisma 7 ESM + driver adapter talab qiladi va
+  NestJS (CommonJS) bilan qo'shimcha ish talab qiladi — alohida vazifa sifatida
+  keyinroq ko'chiriladi.
+- Video R2'da, repoda emas (`.gitignore`).
+- `initData` imzosi serverda HMAC-SHA256 bilan tekshiriladi.

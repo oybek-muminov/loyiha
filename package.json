@@ -1,0 +1,25 @@
+{
+  "name": "univeracademy",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@12.18.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "db:generate": "pnpm --filter @univer/api prisma:generate",
+    "db:migrate": "pnpm --filter @univer/api prisma:migrate",
+    "content:validate": "tsx tools/content-cli/src/index.ts validate"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "turbo": "^2.11.10",
+    "typescript": "5.9.3"
+  }
+}

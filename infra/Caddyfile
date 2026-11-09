@@ -1,0 +1,9 @@
+univeracademy.uz, www.univeracademy.uz {
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+api.univeracademy.uz {
+	encode zstd gzip
+	reverse_proxy api:4000
+}

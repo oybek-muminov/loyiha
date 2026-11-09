@@ -1,0 +1,46 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# build
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# tests
+coverage/
+
+# editor
+.vscode/
+.idea/
+*.swp
+
+# os
+.DS_Store
+Thumbs.db
+
+# media (never commit video)
+content/**/*.mp4
+content/**/*.mov
+content/**/*.mkv
+
+# prisma
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+
+# turbo
+.turbo/
