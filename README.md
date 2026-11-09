@@ -122,19 +122,32 @@ TELEGRAM_BOT_POLLING=true               # lokal test uchun
 
 ### Lokal test (polling)
 
-```bash
-# 1. Mini App uchun HTTPS tunnel
-cloudflared tunnel --url http://localhost:3000
+Mini App HTTPS talab qiladi, lekin **bitta tunnel yetarli**: web `/api/v1`
+so'rovlarini Next.js same-origin proxy orqali API'ga uzatadi
+(`apps/web/next.config.ts`), shuning uchun telefon `localhost`ga murojaat qilmaydi.
 
-# 2. apps/api/.env ichida tunnel manzilini yozing
-#    TELEGRAM_MINIAPP_URL=https://<tunnel>.trycloudflare.com/tg
+```bash
+# 1. API va web'ni ishga tushiring
+pnpm --filter @univer/api dev
+pnpm --filter @univer/web dev
+
+# 2. Boshqa terminalda HTTPS tunnel (3000-port)
+cloudflared tunnel --url http://localhost:3000
+#   -> https://random-words.trycloudflare.com
+
+# 3. apps/api/.env ichida tunnel manzilini yozing
+#    TELEGRAM_MINIAPP_URL=https://random-words.trycloudflare.com/tg
 #    TELEGRAM_BOT_POLLING=true
 
-# 3. API'ni ishga tushiring
+# 4. API'ni qayta ishga tushiring
 pnpm --filter @univer/api dev
 ```
 
 Botda `/start` yuboring — Mini App tugmasi paydo bo'ladi.
+
+> Quick tunnel manzili har safar o'zgaradi. Doimiy manzil uchun Cloudflare'dagi
+> named tunnel + o'z domeningizni (`univeracademy.uz`) ishlating yoki loyihani
+> serverga deploy qiling.
 
 ### Webhook (production)
 
