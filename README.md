@@ -149,6 +149,13 @@ Botda `/start` yuboring — Mini App tugmasi paydo bo'ladi.
 > named tunnel + o'z domeningizni (`univeracademy.uz`) ishlating yoki loyihani
 > serverga deploy qiling.
 
+`cloudflared` o'rnatilmagan bo'lsa, SSH tunnel ham ishlaydi (qo'shimcha dastur kerak emas):
+
+```bash
+ssh -T -o StrictHostKeyChecking=accept-new -R 80:localhost:3000 nokey@localhost.run
+# -> https://<random>.lhr.life
+```
+
 ### Webhook (production)
 
 ```bash
